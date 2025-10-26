@@ -1,0 +1,19 @@
+# Ignorar arquivos de ambiente e artefatos locais
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# Ambientes virtuais
+.venv/
+env/
+
+# Caches e compilados
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# IDE/Editor
+.idea/
+.vscode/

@@ -1,0 +1,53 @@
+# Unified and deduplicated requirements for backend MVC + legacy
+Flask==2.3.3
+Flask-RESTful==0.3.9
+flask-cors==4.0.0
+flask-limiter==3.5.0
+flask-jwt-extended==4.6.0
+flask-mail==0.9.1
+flasgger==0.9.7b2  # Swagger UI/OpenAPI docs
+
+# Validation & serialization
+marshmallow==3.21.1
+
+# Database drivers
+pymysql==1.1.1
+# pymongo==4.7.2  # upgraded for Python 3.10+ compatibility
+pymongo>=3.11,<4.0
+
+# Security & crypto
+bcrypt==4.1.2
+python-dotenv==1.0.1
+itsdangerous==2.1.2
+
+# HTTP & utilities
+requests==2.31.0
+pytz==2024.1
+Babel==2.15.0
+
+# Optional/legacy libs retained (review necessity later)
+xlrd==1.2.0  # For old Excel parsing; xls only
+networkx==2.5  # Check if still required
+pynubank==2.25.0  # If realmente usado
+
+# Tooling / linting (dev dependencies) - optionally move to separate file later
+autopep8==2.0.4
+pycodestyle==2.12.1
+isort==5.13.2
+pylint==3.1.0
+
+# Transitive explicit pins to avoid legacy conflicts
+Werkzeug==2.3.7
+Jinja2==3.1.4
+MarkupSafe==2.1.5
+click==8.1.7
+itsdangerous==2.1.2
+pytest==8.3.2
+redis==5.0.8
+
+# Production WSGI Server
+gunicorn==21.2.0
+
+# Remove duplicated/obsolete: lazy-object-proxy, typed-ast (Python>=3.10), toml, six, mccabe
+
+# TODO: After migration, reassess unused legacy libs.

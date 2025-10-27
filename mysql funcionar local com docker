@@ -1,0 +1,14 @@
+mysql funcionar local com docker
+
+
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+
+mude bind para 0.0.0.0
+
+GRANT ALL ON *.* TO 'araudata'@'%' IDENTIFIED BY 'yourpassword' WITH GRANT OPTION;
+FLUSH PRIVILEGES; 
+
+
+ip addr show
+
+use 192.168.xxx

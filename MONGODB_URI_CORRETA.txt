@@ -1,0 +1,1 @@
+mongodb://mongo:KyFRYfJSHAExpdLTAFQZWiRVenVCjwhx@shinkansen.proxy.rlwy.net:35252/consigexpress?authSource=admin

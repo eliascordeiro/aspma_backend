@@ -57,8 +57,8 @@ class Settings:
     # Default sender used by Flask-Mail when not provided explicitly
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', os.getenv('MAIL_USERNAME'))
 
-    # CORS
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*').split(',')
+    # CORS - Adiciona domínios permitidos (Vercel + localhost para dev)
+    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'https://consigaspma.vercel.app,http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173').split(',')
 
     # Rate Limiting
     RATELIMIT_STORAGE_URL = os.getenv('RATELIMIT_STORAGE_URL', 'memory://')

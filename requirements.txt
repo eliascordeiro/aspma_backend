@@ -48,6 +48,9 @@ redis==5.0.8
 # Production WSGI Server
 gunicorn==21.2.0
 
+# Email API (Brevo/Sendinblue) - Replaces SMTP
+sib-api-v3-sdk==7.6.0
+
 # Remove duplicated/obsolete: lazy-object-proxy, typed-ast (Python>=3.10), toml, six, mccabe
 
 # TODO: After migration, reassess unused legacy libs.

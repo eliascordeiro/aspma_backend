@@ -71,36 +71,79 @@ def esqueceu_alterar_senha_options():  # pragma: no cover (infra/preflight)
   return make_response('', 204)
 
 class MailSender:
+  """
+  Classe de envio de emails usando Brevo API
+  Substitui Flask-Mail com solução mais confiável
+  """
   def __init__(self):
     try:
-      from flask_mail import Message
-      from core.security import mail
-      self._mail = mail
-      self._Message = Message
-    except Exception:
-      # Sem Flask-Mail instalado ou sem configuração: mantém modo no-op
-      self._mail = None
-      class _DummyMsg:
-        def __init__(self, *args, **kwargs):
-          pass
-      self._Message = _DummyMsg
+      from core.email_brevo import BrevoEmailSender
+      self._brevo = BrevoEmailSender()
+      self._use_brevo = True
+    except Exception as e:
+      # Fallback: Se Brevo não configurado, tentar Flask-Mail
+      try:
+        from flask import current_app
+        current_app.logger.warning(f"⚠️ Brevo não configurado, usando Flask-Mail fallback: {str(e)}")
+      except Exception:
+        pass
+      try:
+        from flask_mail import Message
+        from core.security import mail
+        self._mail = mail
+        self._Message = Message
+        self._use_brevo = False
+      except Exception:
+        self._mail = None
+        self._use_brevo = False
 
   def send_codigo(self, email: str, codigo: str):
+    """
+    Envia código de segurança via email usando Brevo ou Flask-Mail (fallback)
+    """
     try:
-      # Se mail não estiver configurado (ex: dev/teste), não tentar enviar e retornar sucesso
+      # MODO 1: Envio via Brevo (preferencial)
+      if self._use_brevo:
+        try:
+          # Buscar nome do usuário (se disponível)
+          usuario = email.split('@')[0]  # Fallback básico
+          
+          resultado = self._brevo.send_codigo_seguranca(
+            to_email=email,
+            codigo=codigo,
+            usuario=usuario
+          )
+          
+          try:
+            from flask import current_app
+            current_app.log_event('mail_sent_brevo', to=email, message_id=resultado.get('message_id'))
+          except Exception:
+            pass
+          
+          return True
+          
+        except Exception as brevo_err:
+          try:
+            from flask import current_app
+            current_app.logger.error(f"❌ Erro ao enviar via Brevo: {str(brevo_err)}")
+          except Exception:
+            pass
+          raise AuthenticationError('Falha ao enviar e-mail')
+      
+      # MODO 2: Fallback Flask-Mail (se Brevo não disponível)
       configured = False
       try:
         from flask import current_app
         configured = bool(getattr(current_app, 'extensions', {}).get('mail'))
       except Exception:
         configured = bool(self._mail)
+      
       if not configured:
         try:
           from flask import current_app
           current_app.log_event('mail_noop', reason='mail_not_configured')
         except Exception:
           pass
-        # Modo estrito: se habilitado, falhar em vez de no-op
         strict = False
         try:
           from flask import current_app
@@ -114,7 +157,7 @@ class MailSender:
         if strict:
             raise AuthenticationError('Envio de e-mail não configurado (MAIL_STRICT_MODE habilitado)')
         return True
-      # Determina o remetente a partir da configuração
+      
       sender = None
       try:
         from flask import current_app
@@ -123,17 +166,17 @@ class MailSender:
         sender = os.getenv('MAIL_DEFAULT_SENDER') or os.getenv('MAIL_USERNAME')
       if not sender:
         sender = 'no-reply@localhost'
+      
       msg = self._Message(
         subject='Código de Segurança A.S.P.M.A.',
         sender=sender,
         recipients=[email]
       )
       msg.html = f"<p style='font-size:22px'>INFORME ESTE CÓDIGO QUANDO SOLICITADO: {codigo}</p>"
+      
       try:
         self._mail.send(msg)
       except Exception as send_err:
-        # Em alguns servidores, o e-mail pode ser aceito mas a conexão cair no pós-DATA.
-        # Quando MAIL_STRICT_MODE=false (default em dev), tratamos como sucesso e logamos.
         strict = False
         try:
           from flask import current_app
@@ -145,19 +188,20 @@ class MailSender:
         except Exception:
           strict = os.getenv('MAIL_STRICT_MODE', 'false').lower() in ('1','true','yes')
         if strict:
-          # Converter para AuthenticationError para a camada superior padronizar
           raise AuthenticationError('Falha ao enviar e-mail')
         try:
           from flask import current_app
           current_app.log_event('mail_send_warning', to=email, error=str(send_err))
         except Exception:
           pass
+      
       try:
         from flask import current_app
         current_app.log_event('mail_sent', to=email)
       except Exception:
         pass
       return True
+      
     except Exception:
       # Converter qualquer falha em AuthenticationError para padronização na camada de serviço
       try:
